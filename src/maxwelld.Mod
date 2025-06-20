@@ -21,19 +21,14 @@ TYPE
   Router* = POINTER TO RouterDesc;
   RouterDesc* = RECORD
     subscribers: ARRAY MaxMsgTypes OF Subscription;
+    Register*: PROCEDURE (r: Router; msgType: LONGINT; 
+                         obj: SYSTEM.PTR; handler: Handler);
+    Send*: PROCEDURE (r: Router; msgType: LONGINT; msg: Message);
   END;
 
-VAR
-  router*: Router;  (* Global router instance *)
-
-(* Initialize router *)
-PROCEDURE Init*;
-BEGIN
-  NEW(router);
-END Init;
-
 (* Register object for specific message type *)
-PROCEDURE Register*(msgType: LONGINT; obj: SYSTEM.PTR; handler: Handler);
+PROCEDURE Register*(r: Router; msgType: LONGINT; 
+                   obj: SYSTEM.PTR; handler: Handler);
 VAR
   sub: Subscription;
 BEGIN
@@ -41,24 +36,38 @@ BEGIN
   NEW(sub);
   sub.obj := obj;
   sub.handle := handler;
-  sub.next := router.subscribers[msgType];
-  router.subscribers[msgType] := sub;
+  sub.next := r.subscribers[msgType];
+  r.subscribers[msgType] := sub;
 END Register;
 
 (* Send message to relevant objects *)
-PROCEDURE Send*(msgType: LONGINT; msg: Message);
+PROCEDURE Send*(r: Router; msgType: LONGINT; msg: Message);
 VAR
   sub: Subscription;
 BEGIN
   ASSERT(msgType < MaxMsgTypes);
-  sub := router.subscribers[msgType];
+  sub := r.subscribers[msgType];
   WHILE sub # NIL DO
     sub.handle(sub.obj, msg);  (* Deliver to subscriber *)
     sub := sub.next;
   END;
 END Send;
 
+(* Create a new router instance *)
+PROCEDURE Create*(): Router;
+VAR
+  router: Router;
+  i: LONGINT;
 BEGIN
-  Init;
-END maxwelld.
+  NEW(router);
+  (* Initialize subscribers array *)
+  FOR i := 0 TO MaxMsgTypes - 1 DO
+    router.subscribers[i] := NIL;
+  END;
+  (* Bind methods *)
+  router.Register := Register;
+  router.Send := Send;
+  RETURN router;
+END Create;
 
+END maxwelld.

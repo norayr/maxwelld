@@ -51,24 +51,27 @@ VAR
   obj1, obj2: MyObject;
   move: MoveMsg;
   draw: DrawMsg;
+  router: maxwelld.Router;
 BEGIN
+  (* Create router *)
+  router := maxwelld.Create();
+  
   (* Create objects *)
   NEW(obj1); obj1.id := 1;
   NEW(obj2); obj2.id := 2;
 
   (* Register for messages *)
-  maxwelld.Register(MoveMsgType, obj1, HandleMove);
-  maxwelld.Register(DrawMsgType, obj1, HandleDraw);
-  maxwelld.Register(MoveMsgType, obj2, HandleMove);
+  router.Register(router, MoveMsgType, obj1, HandleMove);
+  router.Register(router, DrawMsgType, obj1, HandleDraw);
+  router.Register(router, MoveMsgType, obj2, HandleMove);
 
   (* Create and send messages *)
   NEW(move); move.dx := 10; move.dy := 20;
-  maxwelld.Send(MoveMsgType, move);
+  router.Send(router, MoveMsgType, move);
 
   NEW(draw); draw.color := 0FF0000H;
-  maxwelld.Send(DrawMsgType, draw);
+  router.Send(router, DrawMsgType, draw);
 END Run;
 
 BEGIN
 END Demo.
-
