@@ -211,7 +211,7 @@ END PhysicsDemo.
 * System entropy decreases as wasted computation is eliminated
 
 
-![]https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Maxwell%2527s_demon.svg/440px-Maxwell%2527s_demon.svg.png)
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Maxwell%2527s_demon.svg/440px-Maxwell%2527s_demon.svg.png)
 
 ## License
 
