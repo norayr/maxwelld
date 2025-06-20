@@ -9,10 +9,47 @@ Inspired by [Maxwell's Demon](https://en.wikipedia.org/wiki/Maxwell%2527s_demon)
 Traditional Oberon message handling uses broadcast approach:
 
 ```
-(* Broadcast to ALL objects *)
-FOR EACH object DO
-  object.handle(msg)
-END
+WHILE p # NIL DO p.meaow(p); p := p.next END
+```
+
+or
+
+```
+PROCEDURE Broadcast(VAR msg: Message);
+VAR f: Figure;
+BEGIN
+  f := root; (*root is a global variable in the base module*)
+  WHILE f # NIL DO f.handle(f, msg); f := f.next END
+END Broadcast;
+```
+
+The handler is installed in the field handle of every object of type Rectangle.
+
+```
+PROCEDURE Handle(f: Figure; VAR msg: Message);
+VAR r: Rectangle;
+BEGIN r := f(Rectangle);
+  IF msg IS DrawMsg THEN (*draw rectangle r*)
+  ELSIF msg IS MarkMsg THEN MarkRectangle(r, msg(MarkMsg).on)
+  ELSIF msg IS MoveMsg THEN
+  INC(r.x, msg(MoveMsg).x); INC(r.y, msg(MoveMsg).y)
+  ELSIF …
+  END
+END Handle
+```
+
+or
+
+```
+PROCEDURE Handle(f: Figure; VAR msg: Message);
+VAR r: Rectangle;
+BEGIN r := f(Rectangle);
+  CASE msg OF
+    DrawMsg: (*draw rectangle r*) |
+    MarkMsg: MarkRectangle(r, msg(MarkMsg).on) |
+    MoveMsg: INC(r.x, msg(MoveMsg).x); INC(r.y, msg(MoveMsg).y)
+  END
+END Handle
 ```
 
 This forces every object to check if the message is relevant, wasting CPU cycles (especially with many objects).
@@ -98,12 +135,16 @@ BEGIN
 END;
 ```
 
-## Benchmark Comparison
-Approach  10 objects  100 objects  1000 objects
-Broadcast  10 checks  100 checks  1000 checks
-maxwelld  1 check  1 check  1 check
+## Complexity Comparison
+| Approach   | Check Count (10 objects) | 100 objects | 1000 objects | Complexity |
+|------------|--------------------------|-------------|--------------|------------|
+| Broadcast  | 10 checks                | 100 checks  | 1000 checks  | O(N)       |
+| maxwelld   | 1 check                  | 1 check     | 1 check      | O(1)       |
 
-(Message delivery to a single subscriber
+
+
+
+(Message delivery to a single subscriber)
 
 ## Real-World Example
 
