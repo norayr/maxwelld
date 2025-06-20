@@ -86,7 +86,17 @@ IMPORT maxwelld;
 
 ## Usage
 
-1. Define Message Types
+1. Create a Router Instance
+
+```
+VAR 
+  router: maxwelld.Router;
+BEGIN
+  router := maxwelld.Create(); (* Create new router instance *)
+END;
+```
+
+2. Define Message Types
 
 ```
 CONST
@@ -96,11 +106,11 @@ CONST
 TYPE
   MoveMsg* = POINTER TO MoveMsgDesc;
   MoveMsgDesc* = RECORD (maxwelld.MessageDesc)
-    dx*, dy*: INTEGER;
+    dx*, dy*: LONGINT;  (* Use LONGINT for compatibility *)
   END;
 ```
 
-2. Create Object Handlers
+3. Create Object Handlers
 
 ```
 PROCEDURE HandleMove(obj: SYSTEM.PTR; msg: maxwelld.Message);
@@ -108,31 +118,93 @@ VAR
   myObj: MyObject;
   move: MoveMsg;
 BEGIN
-  myObj := obj(MyObject); (* Type guard *)
-  move := msg(MoveMsg);
+  myObj := obj(MyObject); (* Type guard for object *)
+  move := msg(MoveMsg);   (* Type guard for message *)
   (* Process movement *)
 END HandleMove;
 ```
 
-3. Register Objects
+4. Register Objects with Router
 
 ```
-VAR obj: MyObject;
+VAR 
+  obj: MyObject;
 BEGIN
   NEW(obj);
-  maxwelld.Register(MoveMsgType, obj, HandleMove);
+  (* Register using router instance *)
+  router.Register(router, MoveMsgType, obj, HandleMove);
 END;
 ```
 
-4. Send Messages
+4. Send Messages Through Router
 
 ```
-VAR move: MoveMsg;
+VAR 
+  move: MoveMsg;
 BEGIN
   NEW(move);
   move.dx := 10; move.dy := 20;
-  maxwelld.Send(MoveMsgType, move);
+  (* Send using router instance *)
+  router.Send(router, MoveMsgType, move);
 END;
+```
+
+Complete workflow example:
+
+```
+MODULE PhysicsSystem;
+IMPORT maxwelld, SYSTEM;
+
+CONST
+  CollisionMsgType = 2;
+
+TYPE
+  PhysicsBody* = POINTER TO PhysicsBodyDesc;
+  PhysicsBodyDesc* = RECORD
+    id: LONGINT;
+    mass: REAL;
+  END;
+  
+  CollisionMsg* = POINTER TO CollisionMsgDesc;
+  CollisionMsgDesc* = RECORD (maxwelld.MessageDesc)
+    body1*, body2*: PhysicsBody;
+    force*: REAL;
+  END;
+
+VAR
+  physicsRouter: maxwelld.Router;
+
+PROCEDURE HandleCollision(obj: SYSTEM.PTR; msg: maxwelld.Message);
+VAR 
+  col: CollisionMsg;
+BEGIN
+  col := msg(CollisionMsg);
+  (* Process collision between col.body1 and col.body2 *)
+END HandleCollision;
+
+PROCEDURE Init;
+VAR
+  bodyA, bodyB: PhysicsBody;
+BEGIN
+  physicsRouter := maxwelld.Create();
+  
+  NEW(bodyA); NEW(bodyB);
+  physicsRouter.Register(physicsRouter, CollisionMsgType, bodyA, HandleCollision);
+  physicsRouter.Register(physicsRouter, CollisionMsgType, bodyB, HandleCollision);
+END Init;
+
+PROCEDURE SimulateCollision;
+VAR
+  colMsg: CollisionMsg;
+BEGIN
+  NEW(colMsg);
+  (* Setup collision parameters *)
+  physicsRouter.Send(physicsRouter, CollisionMsgType, colMsg);
+END SimulateCollision;
+
+BEGIN
+  Init;
+END PhysicsSystem.
 ```
 
 # maxwelld Performance Analysis: Broadcast vs Selective Routing
@@ -260,59 +332,7 @@ maxwelld's advantage grows with:
 - ✅ More complex type checking in handlers
 - ✅ Diverse message types with different audiences
 
-## Real-World Example
 
-```
-MODULE PhysicsDemo;
-IMPORT maxwelld, Out;
-
-CONST
-  CollisionMsgType = 0;
-  GravityMsgType = 1;
-
-TYPE
-  CollisionMsg* = POINTER TO CollisionMsgDesc;
-  CollisionMsgDesc* = RECORD (maxwelld.MessageDesc)
-    objectId*, force*: INTEGER;
-  END;
-
-  PhysicsBody* = POINTER TO PhysicsBodyDesc;
-  PhysicsBodyDesc* = RECORD
-    id: INTEGER;
-    mass: REAL;
-  END;
-
-PROCEDURE HandleCollision(obj: SYSTEM.PTR; msg: maxwelld.Message);
-VAR body: PhysicsBody; col: CollisionMsg;
-BEGIN
-  body := obj(PhysicsBody);
-  col := msg(CollisionMsg);
-  IF body.id = col.objectId THEN
-    Out.String("Body "); Out.Int(body.id, 0);
-    Out.String(" collided with force "); Out.Int(col.force, 0);
-    Out.Ln;
-  END;
-END HandleCollision;
-
-PROCEDURE Run*;
-VAR
-  body1, body2: PhysicsBody;
-  colMsg: CollisionMsg;
-BEGIN
-  NEW(body1); body1.id := 1; body1.mass := 2.5;
-  NEW(body2); body2.id := 2; body2.mass := 1.8;
-
-  maxwelld.Register(CollisionMsgType, body1, HandleCollision);
-  maxwelld.Register(CollisionMsgType, body2, HandleCollision);
-
-  (* Simulate collision with body2 *)
-  NEW(colMsg); colMsg.objectId := 2; colMsg.force := 42;
-  maxwelld.Send(CollisionMsgType, colMsg);
-END Run;
-
-BEGIN
-END PhysicsDemo.
-```
 
 ## How It Works: The Maxwell's Demon Analogy
 
