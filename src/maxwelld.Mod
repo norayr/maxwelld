@@ -3,7 +3,7 @@ MODULE maxwelld;  (* Message router inspired by Maxwell's Demon *)
 IMPORT SYSTEM;
 
 CONST
-  MaxMsgTypes = 32;  (* Maximum distinct message types *)
+  MaxMsgTypes = 128;  (* Maximum distinct message types *)
 
 TYPE
   Message* = POINTER TO MessageDesc;
