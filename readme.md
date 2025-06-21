@@ -89,7 +89,7 @@ IMPORT maxwelld;
 1. Create a Router Instance
 
 ```
-VAR 
+VAR
   router: maxwelld.Router;
 BEGIN
   router := maxwelld.Create(); (* Create new router instance *)
@@ -127,7 +127,7 @@ END HandleMove;
 4. Register Objects with Router
 
 ```
-VAR 
+VAR
   obj: MyObject;
 BEGIN
   NEW(obj);
@@ -139,7 +139,7 @@ END;
 4. Send Messages Through Router
 
 ```
-VAR 
+VAR
   move: MoveMsg;
 BEGIN
   NEW(move);
@@ -164,7 +164,7 @@ TYPE
     id: LONGINT;
     mass: REAL;
   END;
-  
+
   CollisionMsg* = POINTER TO CollisionMsgDesc;
   CollisionMsgDesc* = RECORD (maxwelld.MessageDesc)
     body1*, body2*: PhysicsBody;
@@ -175,7 +175,7 @@ VAR
   physicsRouter: maxwelld.Router;
 
 PROCEDURE HandleCollision(obj: SYSTEM.PTR; msg: maxwelld.Message);
-VAR 
+VAR
   col: CollisionMsg;
 BEGIN
   col := msg(CollisionMsg);
@@ -187,7 +187,7 @@ VAR
   bodyA, bodyB: PhysicsBody;
 BEGIN
   physicsRouter := maxwelld.Create();
-  
+
   NEW(bodyA); NEW(bodyB);
   physicsRouter.Register(physicsRouter, CollisionMsgType, bodyA, HandleCollision);
   physicsRouter.Register(physicsRouter, CollisionMsgType, bodyB, HandleCollision);
@@ -213,9 +213,9 @@ END PhysicsSystem.
 
 ### Broadcast Approach (Traditional)
 ```oberon
-WHILE f # NIL DO 
+WHILE f # NIL DO
   f.handle(f, msg);  (* Every object checks message type *)
-  f := f.next 
+  f := f.next
 END
 ```
 
@@ -302,7 +302,7 @@ END
 
 Where:
 - N = total objects in system
-- S = subscribers for specific message type  
+- S = subscribers for specific message type
 - lookup_cost ≈ O(1) array access
 - type_check_cost = multiple IF/CASE statements per object
 - handler_cost = actual message processing
@@ -317,7 +317,7 @@ Where:
 
 ## Memory Trade-off
 
-**maxwelld memory overhead**: 
+**maxwelld memory overhead**:
 - Subscription records: `S × (pointer + handler + next)`
 - Router arrays: `MaxMsgTypes × pointer`
 - Typically small compared to object data
@@ -345,7 +345,7 @@ maxwelld's advantage grows with:
 * System entropy decreases as wasted computation is eliminated
 
 
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Maxwell%2527s_demon.svg/440px-Maxwell%2527s_demon.svg.png)
+![](https://upload.wikimedia.org/wikipedia/commons/8/8b/Maxwell%27s_demon.svg)
 
 ## License
 
