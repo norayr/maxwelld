@@ -113,7 +113,7 @@ router.Register(router, MoveMsgType, HandleMove);
 4. Send Messages Through Router
 
 ```
-VAR 
+VAR
   move: MoveMsg;
 BEGIN
   NEW(move);
@@ -141,7 +141,7 @@ VAR
   physicsRouter: maxwelld.Router;
 
 PROCEDURE HandleCollision(msg: maxwelld.Message);
-VAR 
+VAR
   col: CollisionMsg;
 BEGIN
   col := msg(CollisionMsg);
@@ -216,11 +216,11 @@ END
 The performance difference comes from two key optimizations:
 
 1. Eliminated Type Checks
-   
+
     Removes expensive CASE/IF statements from handlers
 
 2. Focused Notification
-   
+
     Only relevant handlers are executed
 
 ### Performance Equations:
@@ -242,9 +242,9 @@ Where:
 
 ### Speedup Potential:
 ```
-                   N × type_check_cost
+          N × type_check_cost
 Speedup = ───────────────────
-                               S
+          S
 ```
 
 
@@ -284,7 +284,7 @@ Speedup = ───────────────────
    ```plaintext
    Broadcast cost: O(N) - Linear growth
    maxwelld cost: O(S) - Constant for fixed interest
-   
+
    N=1000 -> Broadcast: 150,000c
    N=2000 -> Broadcast: 300,000c (2× slower)
    N=2000 (maxwelld): Same as N=1000 if S unchanged
