@@ -9,11 +9,10 @@ TYPE
   Message* = POINTER TO MessageDesc;
   MessageDesc* = RECORD END;  (* Base message type *)
 
-  Handler* = PROCEDURE (obj: SYSTEM.PTR; msg: Message);
+  Handler* = PROCEDURE (msg: Message);
 
   Subscription* = POINTER TO SubscriptionDesc;
   SubscriptionDesc* = RECORD
-    obj: SYSTEM.PTR;      (* Object pointer *)
     handle: Handler;      (* Message handler *)
     next: Subscription;   (* Next subscription *)
   END;
@@ -21,20 +20,18 @@ TYPE
   Router* = POINTER TO RouterDesc;
   RouterDesc* = RECORD
     subscribers: ARRAY MaxMsgTypes OF Subscription;
-    Register*: PROCEDURE (r: Router; msgType: LONGINT; 
-                         obj: SYSTEM.PTR; handler: Handler);
+    Register*: PROCEDURE (r: Router; msgType: LONGINT;
+                          handler: Handler);
     Send*: PROCEDURE (r: Router; msgType: LONGINT; msg: Message);
   END;
 
 (* Register object for specific message type *)
-PROCEDURE Register*(r: Router; msgType: LONGINT; 
-                   obj: SYSTEM.PTR; handler: Handler);
+PROCEDURE Register*(r: Router; msgType: LONGINT; handler: Handler);
 VAR
   sub: Subscription;
 BEGIN
   ASSERT(msgType < MaxMsgTypes);
   NEW(sub);
-  sub.obj := obj;
   sub.handle := handler;
   sub.next := r.subscribers[msgType];
   r.subscribers[msgType] := sub;
@@ -48,7 +45,7 @@ BEGIN
   ASSERT(msgType < MaxMsgTypes);
   sub := r.subscribers[msgType];
   WHILE sub # NIL DO
-    sub.handle(sub.obj, msg);  (* Deliver to subscriber *)
+    sub.handle(msg);  (* Deliver to handler *)
     sub := sub.next;
   END;
 END Send;
@@ -60,11 +57,9 @@ VAR
   i: LONGINT;
 BEGIN
   NEW(router);
-  (* Initialize subscribers array *)
   FOR i := 0 TO MaxMsgTypes - 1 DO
     router.subscribers[i] := NIL;
   END;
-  (* Bind methods *)
   router.Register := Register;
   router.Send := Send;
   RETURN router;
