@@ -345,7 +345,7 @@ maxwelld's advantage grows with:
 * System entropy decreases as wasted computation is eliminated
 
 
-![](Maxwell%27s_demon.svg)
+![](Maxwell's_demon.svg)
 
 ## License
 
